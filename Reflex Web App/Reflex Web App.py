@@ -1,5 +1,6 @@
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
 from rxconfig import config
+import requests
 
 import reflex as rx
 
@@ -12,12 +13,23 @@ class State(rx.State):
 
     pass
 
+def get_instance_metadata():
+    try:
+        metadata_url = "http://169.254.169.254/latest/meta-data/"
+        instance_id = requests.get(metadata_url + "instance-id").text
+        availability_zone = requests.get(metadata_url + "placement/availability-zone").text
+        return instance_id, availability_zone
+    except requests.exceptions.RequestException as e:
+        return None, None
+
 
 def index() -> rx.Component:
+    instance_id, availability_zone = get_instance_metadata()
     return rx.fragment(
         rx.color_mode_button(rx.color_mode_icon(), float="right"),
         rx.vstack(
-            rx.heading("Welcome to Reflex!", font_size="2em"),
+            rx.heading(availability_zone, font_size="2em"),
+            rx.heading(instance_id, font_size="2em"),
             rx.box("Get started by editing ", rx.code(filename, font_size="1em")),
             rx.link(
                 "Check out our docs!",
